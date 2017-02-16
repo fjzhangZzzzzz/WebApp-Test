@@ -42,11 +42,12 @@ def log(sql, args=()):
 
 
 # 创建全局的连接池，每个HTTP请求都能从池中获得数据库连接
-async def create_pool(loop, **kw):
+@asyncio.coroutine
+def create_pool(loop, **kw):
     logging.info('create database connection pool...')
     # 全局变量__pool用于存储整个连接池
     global __pool
-    __pool = await aiomysql.create_pool(
+    __pool = yield from aiomysql.create_pool(
         # **kw参数可以包含所有连接需要用到的关键字参数
         # 默认本机IP
         host=kw.get('host', 'localhost'),
@@ -60,6 +61,12 @@ async def create_pool(loop, **kw):
         minsize=kw.get('minsize', 1),
         loop=loop # 接受一个event_loop实例
     )
+
+async def destroy_pool():
+    global __pool
+    if __pool is not None:
+        __pool.close()
+        await __pool.wait_closed()
 
 # 封装SQL SELECT语句
 async def select(sql, args, size=None):
@@ -117,7 +124,7 @@ class Field(object):
         self.default = default
     # 当打印（数据库）表时， 输出（数据库）表的信息：类名，字段类型和名字
     def __str__(self):
-            return '<%s, %s, %s>' % (self.__class__.__name__, self.column_type, self.name)
+        return '<%s, %s, %s>' % (self.__class__.__name__, self.column_type, self.name)
 
 # 定义不同类型的衍生Field
 # 表的不同列的字段的类型不同
@@ -127,7 +134,7 @@ class StringField(Field):
 
 
 class BooleanField(Field):
-    def __init(self, name=None, default=False):
+    def __init__(self, name=None, default=False):
         super().__init__(name, 'boolean', False, default)
 
 
@@ -223,7 +230,7 @@ Model类可以看做是对所有数据库表操作的基本定义的映射
 Model从dict继承，拥有字典的所有功能，同时实现特殊__getattr__和__setattr__，能够实现属性操作
 实现数据库操作的所有方法，定义为class方法，所有继承自Model都具有数据库操作方法
 """
-class Model(dict, metaclass=Model):
+class Model(dict, metaclass=ModelMetaclass):
     """ 数据模型 """
     def __init__(self, **kw):
         super(Model, self).__init__(**kw)
@@ -318,17 +325,3 @@ class Model(dict, metaclass=Model):
         rows = await execute(self.__delete__, args)
         if rows != 1:
             logging.warn('failed to remove by primary key: affected rows: %s' % rows)
-
-
-if __name__ == '__main__':
-    class User(Model):
-        # 定义类的属性到列的映射：
-        id = IntegerField('id', primary_key=True)
-        name = StringField('username')
-        email = StringField('email')
-        password = StringField('password')
-
-    u = User(id=12345, name='fjzhang', email='fjzhang_@outlook.com', password='password')
-    print(u)
-    u.save()
-    print(u)

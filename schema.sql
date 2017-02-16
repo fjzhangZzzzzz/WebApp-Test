@@ -1,13 +1,13 @@
 -- schema.sql，初始化数据库表
 -- mysql -u root -p < schema.sql
 
-drop database if exists awesome;
+drop database if exists webapp_test;
 
-create database awesome;
+create database webapp_test;
 
-use awesome;
+use webapp_test;
 
-grant select, insert, update, delete on awesome.* to 'www-data'@'localhost' identified by 'www-data';
+grant select, insert, update, delete on webapp_test.* to 'www-data'@'localhost' identified by 'www-data';
 
 create table users (
     `id` varchar(50) not null,
