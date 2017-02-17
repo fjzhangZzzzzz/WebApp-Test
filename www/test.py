@@ -17,8 +17,7 @@ import asyncio, sys
 import orm
 from models import User, Blog, Comment
 
-@asyncio.coroutine
-def test(loop):
+async def test(loop):
     yield from orm.create_pool(loop=loop, user='root', password='fjzhang', db='webapp_test')
     u = User(name='Test', email='fjzhang_@outlook.com', passwd='123456', img='about:blank')
     yield from u.save()
