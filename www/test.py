@@ -13,19 +13,35 @@ code is far away from bugs with the god animal protecting
                   ┃┫┫  ┃┫┫
                   ┗┻┛  ┗┻┛
 """
+
 import asyncio, sys
 import orm
 from models import User, Blog, Comment
+from my_orm import AioMysql
 
-async def test(loop):
-    yield from orm.create_pool(loop=loop, user='root', password='fjzhang', db='webapp_test')
-    u = User(name='Test', email='fjzhang_@outlook.com', passwd='123456', img='about:blank')
-    yield from u.save()
-    yield from orm.destroy_pool()
+__author__ = 'fjzhang'
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(test(loop))
-    loop.close()
-    if loop.is_closed():
-        sys.exit(0)
+
+
+    async def test():
+        await orm.create_pool(loop=loop, user='root', password='fjzhang', db='webapp_test')
+        u = User(name='Test', email='test@example.com', passwd='1234567890', image='about:blank')
+        await u.save()
+        await orm.destroy_pool()
+
+
+    # iomysql = AioMysql()
+    #
+    # async def test():
+    #
+    #     await iomysql.create_pool(
+    #         loop=loop,
+    #         user='root',
+    #         password='fjzhang',
+    #         db='webapp_test'
+    #     )
+
+
+    loop.run_until_complete(test())
