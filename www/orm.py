@@ -40,6 +40,7 @@ import aiomysql
 def log(sql, args=()):
     logging.info('SQL: %s' % sql)
 
+
 # 创建全局的连接池，每个HTTP请求都能从池中获得数据库连接
 async def create_pool(loop, **kw):
     logging.info('create database connection pool...')
@@ -87,10 +88,16 @@ async def select(sql, args, size=None):
         return rs
 
 
-# 封装SQL INSERT，UPDATE，DELETE语句
-# 语句操作参数一样，所以定义一个通用的执行函数
-# 返回操作影响的行号
 async def execute(sql, args, autocommit=True):
+    """
+    封装SQL INSERT，UPDATE，DELETE语句
+    语句操作参数一样，所以定义一个通用的执行函数
+    返回操作影响的行号
+    :param sql: SQL语句
+    :param args:
+    :param autocommit:
+    :return:
+    """
     log(sql)
     global __pool
     async with __pool.get() as conn:
@@ -163,25 +170,28 @@ class TextField(Field):
         super().__init__(name, 'text', False, default)
 
 
-"""定义Model的元类
-
-所有的元类都继承自type
-ModelMetaclass元类定义了所有Model基类的子类实现的操作
-ModelMetaclass工作主要是为一个数据库表映射成一个封装的类做准备：
-- 读取具体子类（user）的映射信息；
-- 创造类的时候，排除对Model类的修改；
-- 在当前类中查找所有的类属性（attrs），如果找到Field属性，
-  就将其保存到__mappings__的dict中，同时从类属性中删除Field（防止实例属性遮住类的同名属性）；
-- 将数据库表名保存到__table__中；
-"""
-
-
 class ModelMetaclass(type):
-    # __new__控制__init__的执行，所以在其执行之前
-    # cls：代表要__init__的类，此参数在实例化时由Python解释器自动提供
-    # bases：代表继承父类的集合
-    # attrs：类的方法集合
+    """定义Model的元类
+
+    所有的元类都继承自type
+    ModelMetaclass元类定义了所有Model基类的子类实现的操作
+    ModelMetaclass工作主要是为一个数据库表映射成一个封装的类做准备：
+    - 读取具体子类（user）的映射信息；
+    - 创造类的时候，排除对Model类的修改；
+    - 在当前类中查找所有的类属性（attrs），如果找到Field属性，
+      就将其保存到__mappings__的dict中，同时从类属性中删除Field（防止实例属性遮住类的同名属性）；
+    - 将数据库表名保存到__table__中；
+    """
+
     def __new__(cls, name, bases, attrs):
+        """
+        __new__控制__init__的执行，所以在其执行之前
+        cls代表要__init__的类，此参数在实例化时由Python解释器自动提供
+        :param name:
+        :param bases: 代表继承父类的集合
+        :param attrs: 类的方法集合
+        :return:
+        """
         # 排除对Model的修改
         if name == 'Model':
             return type.__new__(cls, name, bases, attrs)
@@ -237,19 +247,16 @@ class ModelMetaclass(type):
         return type.__new__(cls, name, bases, attrs)
 
 
-"""定义ORM所有的映射的基类：Model
-
-Model类的任意子类可以映射一个数据库表
-Model类可以看做是对所有数据库表操作的基本定义的映射
-
-基于字典查询形式
-Model从dict继承，拥有字典的所有功能，同时实现特殊__getattr__和__setattr__，能够实现属性操作
-实现数据库操作的所有方法，定义为class方法，所有继承自Model都具有数据库操作方法
-"""
-
-
 class Model(dict, metaclass=ModelMetaclass):
-    """ 数据模型 """
+    """定义ORM所有的映射的基类：Model
+
+    Model类的任意子类可以映射一个数据库表
+    Model类可以看做是对所有数据库表操作的基本定义的映射
+
+    基于字典查询形式
+    Model从dict继承，拥有字典的所有功能，同时实现特殊__getattr__和__setattr__，能够实现属性操作
+    实现数据库操作的所有方法，定义为class方法，所有继承自Model都具有数据库操作方法
+    """
 
     def __init__(self, **kw):
         super(Model, self).__init__(**kw)
@@ -279,8 +286,7 @@ class Model(dict, metaclass=ModelMetaclass):
     # 类方法有类变量cls传入，从而可以用cls做一些相关的处理。
     # 并且有子类继承时，调用该类方法时，传入的类变量cls是子类，而非父类。
     @classmethod
-    @asyncio.coroutine
-    def findAll(cls, where=None, args=None, **kw):
+    async def findAll(cls, where=None, args=None, **kw):
         ' find objects by where clause. '
         sql = [cls.__select__]
         if where:
@@ -303,7 +309,7 @@ class Model(dict, metaclass=ModelMetaclass):
                 args.extend(limit)
             else:
                 raise ValueError('Invalid limit value: %s' % str(limit))
-        rs = yield from select(' '.join(sql), args)
+        rs = await select(' '.join(sql), args)
         return [cls(**r) for r in rs]
 
     @classmethod

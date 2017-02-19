@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Models for user, blog, comment.
-'''
+"""
 __author__ = 'fjzhang'
 
 import time, uuid
