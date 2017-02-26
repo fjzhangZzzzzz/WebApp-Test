@@ -3,11 +3,14 @@
 基于aiohttp的web框架
 """
 
-import asyncio, os, inspect, logging, functools
+import functools
+import inspect
+import logging
+import os
+import asyncio
+from urllib import parse
 
 from aiohttp import web
-
-from urllib import parse
 
 from www.apis import APIError
 
@@ -88,8 +91,7 @@ def has_request_arg(fn):
         if name == 'request':
             found = True
             continue
-        if found and (
-                            param.kind != inspect.Parameter.VAR_POSITIONAL and param.kind != inspect.Parameter.KEYWORD_ONLY and param.kind != inspect.Parameter.VAR_KEYWORD):
+        if found and (param.kind != inspect.Parameter.VAR_POSITIONAL and param.kind != inspect.Parameter.KEYWORD_ONLY and param.kind != inspect.Parameter.VAR_KEYWORD):
             raise ValueError(
                 'request parameter must be the last named parameter in function: %s%s' % (fn.__name__, str(sig)))
     return found
@@ -97,9 +99,9 @@ def has_request_arg(fn):
 
 class RequestHandler(object):
     """
-    从传入的URL处理函数中解析需要接受的参数
-    解析request，获取必要参数，然后调用URL处理函数
-    将结果转换为web.Response
+        从传入的URL处理函数中解析需要接受的参数
+        解析request，获取必要参数，然后调用URL处理函数
+        将结果转换为web.Response
     """
 
     def __init__(self, app, fn):
@@ -123,45 +125,39 @@ class RequestHandler(object):
                     if not isinstance(params, dict):
                         return web.HTTPBadRequest('JSON body must be object.')
                     kw = params
-                elif ct.startswith('application/x-www-form-urlencoded') or ct.startswith('application/form-data'):
+                elif ct.startswith('application/x-www-form-urlencoded') or ct.startswith('multipart/form-data'):
                     params = await request.post()
                     kw = dict(**params)
                 else:
                     return web.HTTPBadRequest('Unsupported Content-Type: %s' % request.content_type)
-
             if request.method == 'GET':
                 qs = request.query_string
                 if qs:
                     kw = dict()
                     for k, v in parse.parse_qs(qs, True).items():
                         kw[k] = v[0]
-
         if kw is None:
             kw = dict(**request.match_info)
         else:
-            if not self._has_var_kw_arg and self._has_named_kw_args:
-                # remove all unamed kw
+            if not self._has_var_kw_arg and self._named_kw_args:
+                # remove all unamed kw:
                 copy = dict()
-                for name in self._has_named_kw_args:
+                for name in self._named_kw_args:
                     if name in kw:
                         copy[name] = kw[name]
                 kw = copy
-
-            # check named arg
+            # check named arg:
             for k, v in request.match_info.items():
                 if k in kw:
-                    logging.warn('Duplicate arg name in named arg and kw args: %s' % k)
+                    logging.warning('Duplicate arg name in named arg and kw args: %s' % k)
                 kw[k] = v
-
         if self._has_request_arg:
             kw['request'] = request
-
-        # check required kw
+        # check required kw:
         if self._required_kw_args:
             for name in self._required_kw_args:
-                if not name in kw:
-                    return web.HTTPBadRequest('Missing arguement: %s' % name)
-
+                if name not in kw:
+                    return web.HTTPBadRequest('Missing argument: %s' % name)
         logging.info('call with args: %s' % str(kw))
         try:
             r = await self._func(**kw)

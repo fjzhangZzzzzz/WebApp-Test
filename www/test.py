@@ -14,9 +14,10 @@ code is far away from bugs with the god animal protecting
                   ┗┻┛  ┗┻┛
 """
 
-import asyncio, sys
+import asyncio
+
+from www.models import User
 from www.orm import create_pool, destroy_pool
-from www.models import User, Blog, Comment
 
 __author__ = 'fjzhang'
 

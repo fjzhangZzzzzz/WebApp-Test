@@ -1,10 +1,15 @@
+import asyncio
+import json
 import logging
-import asyncio, os, json, time
-from www import orm
-from www.webcore import add_routes, add_static
+import os
+import time
 from datetime import datetime
+
 from aiohttp import web
 from jinja2 import Environment, FileSystemLoader
+
+from www import orm
+from www.webcore import add_routes, add_static
 
 logging.basicConfig(level=logging.INFO)
 
@@ -43,6 +48,12 @@ async def logger_factory(app, handler):
 
 
 async def data_factory(app, handler):
+    """
+
+    :param app:
+    :param handler:
+    :return:
+    """
     async def parse_data(request):
         if request.method == 'POST':
             if request.content_type.startswith('application/json'):
