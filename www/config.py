@@ -1,10 +1,9 @@
 """
 Configuration
 """
+from www import config_default
 
 __author__ = 'fjzhang'
-
-from www import config_default
 
 
 class Dict(dict):
@@ -53,6 +52,7 @@ configs = config_default.configs
 
 try:
     from www import config_override
+
     configs = merge(configs, config_override.configs)
 except ImportError:
     pass

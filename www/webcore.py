@@ -9,7 +9,7 @@ from aiohttp import web
 
 from urllib import parse
 
-from apis import APIError
+from www.apis import APIError
 
 __author__ = 'fjzhang'
 
@@ -170,46 +170,33 @@ class RequestHandler(object):
             return dict(error=e.error, data=e.data, message=e.message)
 
 
-def add_route(app, fn):
-    """
-    注册URL处理函数
-    :param app:
-    :param fn: URL处理函数
-    :return:
-    """
-    method = getattr(fn, '__method__', None)
-    path = getattr(fn, '__path__', None)
-    if method is None or path is None:
-        raise ValueError('@get or @post not defined in %s.' % str(fn))
-    if not asyncio.iscoroutinefunction(fn) and not inspect.isgeneratorfunction(fn):
-        fn = asyncio.coroutine(fn)
-    logging.info(
-        'add route %s %s => %s(%s)' % (method, path, fn.__name__, ', '.join(inspect.signature(fn).parameters.keys())))
-    app.router.add_route(method, path, RequestHandler(app, fn))
-
-
+# 添加一个模块的所有路由
 def add_routes(app, module_name):
-    """
-    自动扫描注册指定模块中符合条件的函数
-    :param app:
-    :param module_name: 指定模块名
-    :return:
-    """
-    n = module_name.rfind('.')
-    if n == (-1):
-        mod = __import__(module_name, globals(), locals())
-    else:
-        name = module_name[n + 1:]
-        mod = getattr(__import__(module_name[:n], globals(), locals(), [name]), name)
+    try:
+        mod = __import__(module_name, fromlist=['get_submodule'])
+    except ImportError as e:
+        raise e
+    # 遍历mod的方法和属性,主要是找处理方法
+    # 由于我们定义的处理方法，被@get或@post修饰过，所以方法里会有'__method__'和'__route__'属性
     for attr in dir(mod):
+        # 如果是以'_'开头的，一律pass，我们定义的处理方法不是以'_'开头的
         if attr.startswith('_'):
             continue
-        fn = getattr(mod, attr)
-        if callable(fn):
-            add_route(app, fn)
+        # 获取到非'_'开头的属性或方法
+        func = getattr(mod, attr)
+        # 获取有__method___和__route__属性的方法
+        if callable(func) and hasattr(func, '__method__') and hasattr(func, '__route__'):
+            args = ', '.join(inspect.signature(func).parameters.keys())
+            logging.info('add route %s %s => %s(%s)' % (func.__method__, func.__route__, func.__name__, args))
+            app.router.add_route(func.__method__, func.__route__, RequestHandler(app, func))
 
 
 def add_static(app):
+    """
+    添加静态文件夹的路径
+    :param app:
+    :return:
+    """
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
     app.router.add_static('/static/', path)
     logging.info('add static %s => %s' % ('/static/', path))
