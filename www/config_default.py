@@ -14,7 +14,7 @@ configs = {
         'db': 'webapp_test'
     },
     'session': {
-        'secret': 'Awesome'
+        'secret': 'fjzhang_webapp'
     }
 
 }

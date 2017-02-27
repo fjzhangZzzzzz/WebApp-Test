@@ -50,7 +50,6 @@ def toDict(d):
 
 
 configs = config_default.configs
-
 try:
     # from www import config_override
     import config_override
