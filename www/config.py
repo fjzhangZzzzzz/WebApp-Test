@@ -1,7 +1,8 @@
 """
 Configuration
 """
-from www import config_default
+# from www import config_default
+import config_default
 
 __author__ = 'fjzhang'
 
@@ -51,7 +52,8 @@ def toDict(d):
 configs = config_default.configs
 
 try:
-    from www import config_override
+    # from www import config_override
+    import config_override
 
     configs = merge(configs, config_override.configs)
 except ImportError:

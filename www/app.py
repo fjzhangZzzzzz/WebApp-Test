@@ -8,8 +8,11 @@ from datetime import datetime
 from aiohttp import web
 from jinja2 import Environment, FileSystemLoader
 
-from www import orm
-from www.webcore import add_routes, add_static
+# from www import orm
+import orm
+from models import User
+# from www.webcore import add_routes, add_static
+from webcore import add_routes, add_static
 
 logging.basicConfig(level=logging.INFO)
 
@@ -84,13 +87,22 @@ async def response_factory(app, handler):
             resp.content_type = 'text/html;charset=utf-8'
             return resp
         if isinstance(r, dict):
+            """ 
+            handler处理后返回dict对象                
+            """
             template = r.get('__template__')
             if template is None:
+                """ 
+                1. 通过API获取数据，序列化response结果为JSON                
+                """
                 resp = web.Response(
                     body=json.dumps(r, ensure_ascii=False, default=lambda o: o.__dict__).encode('utf-8'))
                 resp.content_type = 'application/json;charset=utf-8'
                 return resp
             else:
+                """ 
+                1. 正常模板网页              
+                """
                 resp = web.Response(body=app['__templating__'].get_template(template).render(**r).encode('utf-8'))
                 resp.content_type = 'text/html;charset=utf-8'
                 return resp

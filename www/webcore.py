@@ -12,7 +12,8 @@ from urllib import parse
 
 from aiohttp import web
 
-from www.apis import APIError
+# from www.apis import APIError
+from apis import APIError
 
 __author__ = 'fjzhang'
 
