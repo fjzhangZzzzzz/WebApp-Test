@@ -60,7 +60,6 @@ async def create_pool(loop, **kw):
         minsize=kw.get('minsize', 1),
         loop=loop  # 接受一个event_loop实例
     )
-    print(__pool)
 
 
 async def destroy_pool():
