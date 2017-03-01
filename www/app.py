@@ -1,18 +1,21 @@
+_pycharm_edit_ = False
+
 import asyncio
 import json
 import logging
 import os
 import time
 from datetime import datetime
-
 from aiohttp import web
 from jinja2 import Environment, FileSystemLoader
 
-from www import orm
-# import orm
-# from models import User
-from www.webcore import add_routes, add_static
-# from webcore import add_routes, add_static
+if _pycharm_edit_:
+    from www import orm
+    from www.webcore import add_routes, add_static
+else:
+    import orm
+    from webcore import add_routes, add_static
+
 
 logging.basicConfig(level=logging.INFO)
 
