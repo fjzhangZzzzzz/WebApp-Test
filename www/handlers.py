@@ -9,12 +9,12 @@ from aiohttp import web
 if _pycharm_edit_:
     from www.webcore import get, post
     from www.models import User, Comment, Blog, next_id
-    from www.apis import APIValueError, APIResourceNotFoundError, APIError
+    from www.apis import APIValueError, APIResourceNotFoundError, APIError, APIPermissionError
     from www.config import configs
 else:
     from webcore import get, post
     from models import User, Comment, Blog, next_id
-    from apis import APIValueError, APIResourceNotFoundError, APIError
+    from apis import APIValueError, APIResourceNotFoundError, APIError, APIPermissionError
     from config import configs
 
 
@@ -127,13 +127,13 @@ async def signout(request):
 
 _RE_EMAIL = re.compile(r'^[a-z0-9\.\-\_]+\@[a-z0-9\-\_]+(\.[a-z0-9\-\_]+){1,4}$')
 _RE_SHA1 = re.compile(r'^[0-9a-f]{40}$')
-""" 
-注册请求
-"""
 
 
 @post('/api/users')
 async def api_register_user(*, email, name, passwd):
+    """ 
+    注册请求
+    """
     if not name or not name.strip():
         raise APIValueError('name')
     if not email or not _RE_EMAIL.match(email):
@@ -159,9 +159,11 @@ async def api_register_user(*, email, name, passwd):
     return r
 
 
-# 登录验证
 @post('/api/authenticate')
 async def authenticate(*, email, passwd):
+    """
+    登录验证
+    """
     if not email:
         raise APIValueError('email', 'Invaild email.')
     if not passwd:
@@ -186,3 +188,15 @@ async def authenticate(*, email, passwd):
     r.content_type = 'application/json'
     r.body = json.dumps(user, ensure_ascii=False).encode('utf-8')
     return r
+
+
+def check_admin(request):
+    if request.__user__ is None or not request.__user__.admin:
+        raise APIPermissionError()
+
+
+@post('/api/blogs')
+async def api_create_blog(request, *, name, summary, content):
+    check_admin()
+    if not name or not name.strip():
+        raise APIValueError('name', 'name cannot be empty.')
