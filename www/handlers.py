@@ -1,28 +1,22 @@
 """
 URL处理方法
 """
-_pycharm_edit_ = False
 
 import re, time, json, logging, hashlib, base64, asyncio
 from aiohttp import web
 
-if _pycharm_edit_:
+try:
     from www.webcore import get, post
     from www.models import User, Comment, Blog, next_id
     from www.apis import APIValueError, APIResourceNotFoundError, APIError, APIPermissionError
     from www.config import configs
-else:
+    from www import markdown2
+except ImportError:
     from webcore import get, post
     from models import User, Comment, Blog, next_id
     from apis import APIValueError, APIResourceNotFoundError, APIError, APIPermissionError
     from config import configs
-
-
-
-# from webcore import get, post
-# from models import User, Comment, Blog, next_id
-# from apis import APIValueError, APIResourceNotFoundError, APIError
-# from config import configs
+    import markdown2
 
 __author__ = 'fjzhang'
 
@@ -125,6 +119,41 @@ async def signout(request):
     return r
 
 
+@get('/manage/blog/create')
+async def manage_create_blog():
+    return {
+        '__template__': 'manage_blog_edit.html',
+        'id': '',
+        'action': '/api/blogs'
+    }
+
+
+def text2html(text):
+    lines = map(lambda s: '<p>%s</p>' % s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'),
+                filter(lambda s: s.strip() != '', text.split('\n')))
+    return ''.join(lines)
+
+
+@get('/blogs/{id}')
+async def get_blog(*, id):
+    blog = await Blog.find(id)
+    comments = await Comment.findAll('blog_id=?', [id], orderBy='created_at desc')
+    for c in comments:
+        c.html_content = text2html(c.content)
+    blog.html_content = markdown2.markdown(blog.content)
+    return {
+        '__template__': 'blogs.html',
+        'blog': blog,
+        'comment': comments
+    }
+
+
+@get('/api/blogs/{id}')
+async def api_get_blog(*, id):
+    blog = await Blog.find(id)
+    return blog
+
+
 _RE_EMAIL = re.compile(r'^[a-z0-9\.\-\_]+\@[a-z0-9\-\_]+(\.[a-z0-9\-\_]+){1,4}$')
 _RE_SHA1 = re.compile(r'^[0-9a-f]{40}$')
 
@@ -200,3 +229,11 @@ async def api_create_blog(request, *, name, summary, content):
     check_admin()
     if not name or not name.strip():
         raise APIValueError('name', 'name cannot be empty.')
+    if not summary or not summary.strip():
+        raise APIValueError('summary', 'summary cannot be empty.')
+    if not content or not content.strip():
+        raise APIValueError('content', 'content cannot be empty.')
+    blog = Blog(user_id=request.__user__.id, user_name=request.__user__.name, user_image=request.__user__.image,
+                name=name.strip(), summary=summary.strip(), content=content.strip)
+    await blog.save()
+    return blog

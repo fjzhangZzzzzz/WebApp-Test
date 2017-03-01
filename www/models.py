@@ -5,13 +5,11 @@ Models for user, blog, comment.
 """
 __author__ = 'fjzhang'
 
-_pycharm_edit_ = False
-
 import time, uuid
 
-if _pycharm_edit_:
+try:
     from www.orm import Model, StringField, BooleanField, FloatField, TextField
-else:
+except ImportError:
     from orm import Model, StringField, BooleanField, FloatField, TextField
 
 

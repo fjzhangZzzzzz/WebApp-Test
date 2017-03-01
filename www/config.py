@@ -1,11 +1,10 @@
 """
 Configuration
 """
-_pycharm_edit_ = False
 
-if _pycharm_edit_:
+try:
     from www import config_default
-else:
+except ImportError:
     import config_default
 
 
@@ -56,8 +55,10 @@ def toDict(d):
 
 configs = config_default.configs
 try:
-    from www import config_override
-    # import config_override
+    try:
+        from www import config_override
+    except ImportError:
+        import config_override
 
     configs = merge(configs, config_override.configs)
 except ImportError:

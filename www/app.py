@@ -1,5 +1,3 @@
-_pycharm_edit_ = False
-
 import asyncio
 import json
 import logging
@@ -9,10 +7,10 @@ from datetime import datetime
 from aiohttp import web
 from jinja2 import Environment, FileSystemLoader
 
-if _pycharm_edit_:
+try:
     from www import orm
     from www.webcore import add_routes, add_static
-else:
+except ImportError:
     import orm
     from webcore import add_routes, add_static
 

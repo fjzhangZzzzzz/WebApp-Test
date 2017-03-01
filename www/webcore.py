@@ -3,8 +3,6 @@
 基于aiohttp的web框架
 """
 
-_pycharm_edit_ = False
-
 import functools
 import inspect
 import logging
@@ -14,9 +12,9 @@ from urllib import parse
 from aiohttp import web
 
 
-if _pycharm_edit_:
+try:
     from www.apis import APIError
-else:
+except ImportError:
     from apis import APIError
 
 __author__ = 'fjzhang'
