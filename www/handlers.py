@@ -1,12 +1,23 @@
 """
 URL处理方法
 """
+_pycharm_edit_ = False
+
 import re, time, json, logging, hashlib, base64, asyncio
-from www.webcore import get, post
-from www.models import User, Comment, Blog, next_id
-from www.apis import APIValueError, APIResourceNotFoundError, APIError
-from www.config import configs
 from aiohttp import web
+
+if _pycharm_edit_:
+    from www.webcore import get, post
+    from www.models import User, Comment, Blog, next_id
+    from www.apis import APIValueError, APIResourceNotFoundError, APIError
+    from www.config import configs
+else:
+    from webcore import get, post
+    from models import User, Comment, Blog, next_id
+    from apis import APIValueError, APIResourceNotFoundError, APIError
+    from config import configs
+
+
 
 # from webcore import get, post
 # from models import User, Comment, Blog, next_id

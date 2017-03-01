@@ -1,8 +1,13 @@
 """
 Configuration
 """
-from www import config_default
-# import config_default
+_pycharm_edit_ = False
+
+if _pycharm_edit_:
+    from www import config_default
+else:
+    import config_default
+
 
 __author__ = 'fjzhang'
 
