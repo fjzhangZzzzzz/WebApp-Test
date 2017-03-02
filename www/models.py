@@ -3,14 +3,12 @@
 """
 Models for user, blog, comment.
 """
-__author__ = 'fjzhang'
-
 import time, uuid
 
-try:
-    from www.orm import Model, StringField, BooleanField, FloatField, TextField
-except ImportError:
-    from orm import Model, StringField, BooleanField, FloatField, TextField
+from www.orm import Model, StringField, BooleanField, FloatField, TextField
+
+
+__author__ = 'fjzhang'
 
 
 def next_id():

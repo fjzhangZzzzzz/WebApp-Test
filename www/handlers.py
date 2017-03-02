@@ -5,18 +5,11 @@ URL处理方法
 import re, time, json, logging, hashlib, base64, asyncio
 from aiohttp import web
 
-try:
-    from www.webcore import get, post
-    from www.models import User, Comment, Blog, next_id
-    from www.apis import APIValueError, APIResourceNotFoundError, APIError, APIPermissionError
-    from www.config import configs
-    from www import markdown2
-except ImportError:
-    from webcore import get, post
-    from models import User, Comment, Blog, next_id
-    from apis import APIValueError, APIResourceNotFoundError, APIError, APIPermissionError
-    from config import configs
-    import markdown2
+from www.webcore import get, post
+from www.models import User, Comment, Blog, next_id
+from www.apis import APIValueError, APIResourceNotFoundError, APIError, APIPermissionError
+from www.config import configs
+from www import markdown2
 
 __author__ = 'fjzhang'
 
@@ -38,33 +31,44 @@ def user2cookie(user, max_age):
     return '-'.join(L)
 
 
-# async def cookie2user(cookie_str):
-#     """
-#     解析cookie，如果cookie有效，则载入user
-#     :param cookie_str: cookie字串
-#     :return: cookie有效时返回user，无效返回None
-#     """
-#     if not cookie_str:
-#         return None
-#     try:
-#         L = cookie_str.split('-')
-#         if len(L) != 3:
-#             return None
-#         uid, expires, sha1 = L
-#         if int(expires) < time.time():
-#             return None
-#         user = await User.find(uid)
-#         if user is None:
-#             return None
-#         s = '%s-%s-%s-%s' % (uid, user.passwd, expires, _COOKIE_KEY)
-#         if sha1 != hashlib.sha1(s.encode('utf-8')).hexdigest():
-#             logging.info('Invaild sha1')
-#             return None
-#         user.passwd = '******'
-#         return user
-#     except Exception as e:
-#         logging.exception(e)
-#         return None
+def get_page_index(page_str):
+    p = 1
+    try:
+        p = int(page_str)
+    except ValueError as e:
+        pass
+    if p < 1:
+        p = 1
+    return p
+
+
+async def cookie2user(cookie_str):
+    """
+    解析cookie，如果cookie有效，则载入user
+    :param cookie_str: cookie字串
+    :return: cookie有效时返回user，无效返回None
+    """
+    if not cookie_str:
+        return None
+    try:
+        L = cookie_str.split('-')
+        if len(L) != 3:
+            return None
+        uid, expires, sha1 = L
+        if int(expires) < time.time():
+            return None
+        user = await User.find(uid)
+        if user is None:
+            return None
+        s = '%s-%s-%s-%s' % (uid, user.passwd, expires, _COOKIE_KEY)
+        if sha1 != hashlib.sha1(s.encode('utf-8')).hexdigest():
+            logging.info('Invaild sha1')
+            return None
+        user.passwd = '******'
+        return user
+    except Exception as e:
+        logging.exception(e)
+        return None
 
 
 # @get('/')
@@ -120,7 +124,7 @@ async def signout(request):
 
 
 @get('/manage/blog/create')
-async def manage_create_blog():
+async def manage_create_blog(request):
     return {
         '__template__': 'manage_blog_edit.html',
         'id': '',
