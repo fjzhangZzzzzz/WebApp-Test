@@ -2,10 +2,7 @@
 Configuration
 """
 
-try:
-    from www import config_default
-except ImportError:
-    import config_default
+import config_default
 
 
 __author__ = 'fjzhang'
@@ -55,11 +52,7 @@ def toDict(d):
 
 configs = config_default.configs
 try:
-    try:
-        from www import config_override
-    except ImportError:
-        import config_override
-
+    import config_override
     configs = merge(configs, config_override.configs)
 except ImportError:
     pass

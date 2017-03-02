@@ -7,12 +7,8 @@ from datetime import datetime
 from aiohttp import web
 from jinja2 import Environment, FileSystemLoader
 
-try:
-    from www import orm
-    from www.webcore import add_routes, add_static
-except ImportError:
-    import orm
-    from webcore import add_routes, add_static
+import orm
+from webcore import add_routes, add_static
 
 
 logging.basicConfig(level=logging.INFO)

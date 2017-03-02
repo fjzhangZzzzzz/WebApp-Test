@@ -5,18 +5,11 @@ URL处理方法
 import re, time, json, logging, hashlib, base64, asyncio
 from aiohttp import web
 
-try:
-    from www.webcore import get, post
-    from www.models import User, Comment, Blog, next_id
-    from www.apis import APIValueError, APIResourceNotFoundError, APIError, APIPermissionError
-    from www.config import configs
-    from www import markdown2
-except ImportError:
-    from webcore import get, post
-    from models import User, Comment, Blog, next_id
-    from apis import APIValueError, APIResourceNotFoundError, APIError, APIPermissionError
-    from config import configs
-    import markdown2
+from webcore import get, post
+from models import User, Comment, Blog, next_id
+from apis import APIValueError, APIResourceNotFoundError, APIError, APIPermissionError
+from config import configs
+import markdown2
 
 __author__ = 'fjzhang'
 

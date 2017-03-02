@@ -7,10 +7,8 @@ __author__ = 'fjzhang'
 
 import time, uuid
 
-try:
-    from www.orm import Model, StringField, BooleanField, FloatField, TextField
-except ImportError:
-    from orm import Model, StringField, BooleanField, FloatField, TextField
+
+from orm import Model, StringField, BooleanField, FloatField, TextField
 
 
 def next_id():
